@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <title>Netflix Movies and Series popular genre</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .container {
+      padding: 0 30px;
+      margin: auto;
+      height: 100vh;
+      overflow-y: auto;
+      display: flex;
+      align-items: left;
+      justify-content: left;
+    }
+
+    .chart-container {
+      width: 70%;
+      height: auto;
+      padding: 10px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .chart-container select {
+      width: 200px;
+      height: 32px;
+      border: 1px solid #8c92ac;
+      border-radius: 5px;
+      font-size: 14px;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    .chart-area {
+      width: 100%;
+      height: 800px;
+    }
+
+    .narration {
+      padding: 10px;
+      
+    }
+
+    .title {
+      font-size: 15px;
+    }
+
+    .about {
+      font-size: 12px;
+    }
+
+    .description {
+      margin-bottom: 5px;
+      margin-left: 10px;
+      font-size: 12px;
+    }
+
+    a {
+      width: 50px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      background-color: steelblue;
+      color: white;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: none;
+      border-radius: 5px;
+      background-color: steelblue;
+      color: white;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .navigation {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+
+    .tooltip {
+      background-color: #fff;
+      border: 1px solid #8c92ac;
+      border-radius: 5px;
+      padding: 10px;
+      font-size: 14px;
+      color: #8c92ac;
+      pointer-events: none;
+      position: absolute;
+    }
+
+    .tooltip-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .tooltip-text {
+      margin-bottom: 5px;
+    }
+
+    .dropdown {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .annotation p {
+      margin-bottom: 2px;
+      font-size: 14px;
+      padding: 1px;
+    }
+
+    .annotation p span {
+      font-weight: normal;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="narration">
+    <h3 class="title">
+      Top 10 Genres and Rating of most Watched entertainment type, added on Netflix
+    </h3>
+
+    <p class="description">
+      This page shpws the top 10 Genres of the Entertainment Type selected on the previous page and the Rating.<br>
+      User can change the country from the "Select country" drop down.
+    </p>
+
+    <div class="navigation">
+      <button type="button" style="position: relative;" onclick="window.location.href='./index.html'">Home</button>
+      <button type="button" style="position: absolute;transform: translate(150px);" onclick="redirectToMap()">World
+        data</button>
+      <button type="button" style="position: absolute; transform: translate(300px);"
+        onclick="redirectToMoviesShowComparison()">Series and Movies Stats</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="chart-container">
+      <div class="dropdown">
+        <label for="countryNames">Select the country</label>
+        <select name="countryNames" id="countryNames"></select>
+      </div>
+      <div id="chart" class="chart-area"></div>
+    </div>
+  </div>
+  <script>
+    function redirectToMap() {
+      var tdropdown = document.getElementById("countryNames");
+      var stwo = tdropdown.options[tdropdown.selectedIndex].text;;
+      location.href = "./map.html?country=" + stwo;
+    }
+
+    function redirectToMoviesShowComparison() {
+      var tdropdown = document.getElementById("countryNames");
+      var stwo = tdropdown.options[tdropdown.selectedIndex].text;;
+      location.href = "./line.html?country=" + stwo;
+    }
+
+    let containerWidth = document
+      .getElementById("chart")
+      .getBoundingClientRect().width;
+    let containerHeight = document
+      .getElementById("chart")
+      .getBoundingClientRect().height;
+    const margin = { top: 30, right: 120, bottom: 40, left: 250 };
+    let width = containerWidth - margin.left - margin.right;
+    let height = containerHeight - margin.top - margin.bottom;
+
+    const svg = d3
+      .select("#chart")
+      .append("svg")
+      .attr("width", containerWidth)
+      .attr("height", containerHeight)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    const tooltip = d3
+      .select("#chart")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("opacity", 0);
+
+    d3.csv("./data/netflix_titles.csv").then((data) => {
+      const urlParams = new URLSearchParams(window.location.search);
+      let selectedCountry = urlParams.get("country") || "World";
+      var countryData = data;
+      if (selectedCountry != "World") {
+        countryData = data?.filter(
+          (item) => item.country === selectedCountry
+        );
+      }
+
+      var selGenre = urlParams.get("type");
+      if (selGenre) {
+        countryData = countryData?.filter(
+          (item) => item.type === selGenre
+        );
+      }
+
+      const countryNames = [
+        ...new Set(data.map((item) => item.country)),
+      ].sort();
+
+      const dropdown1 = document.getElementById("countryNames");
+      const option1 = document.createElement("option");
+      option1.value = "World";
+      option1.textContent = "World";
+      dropdown1.appendChild(option1);
+
+      countryNames.forEach((country) => {
+        const option = document.createElement("option");
+        option.value = country;
+        option.textContent = country;
+        dropdown1.appendChild(option);
+      });
+
+      dropdown1.value = selectedCountry;
+
+      refreshChart(countryData, selectedCountry, selGenre);
+
+      dropdown1.addEventListener("change", (event) => {
+        selectedCountry = event.target.value;
+        countryData = data;
+        if (selectedCountry != "World") {
+          countryData = data?.filter(
+            (item) => item.country === selectedCountry
+          );
+        }
+        refreshChart(countryData, selectedCountry,"");
+      });
+      window.addEventListener("resize", () => {
+        svg.selectAll("*").remove();
+        containerWidth = document
+          .getElementById("chart")
+          .getBoundingClientRect().width;
+        containerHeight = document
+          .getElementById("chart")
+          .getBoundingClientRect().height;
+        width = containerWidth - margin.left - margin.right;
+        height = containerHeight - margin.top - margin.bottom;
+
+        svg.attr("width", containerWidth).attr("height", containerHeight);
+
+        refreshChart(countryData, selectedCountry, selGenre);
+      });
+    });
+
+    function refreshChart(countryData = [], selectedCountry, showType = "") {
+      if (countryData.length === 0) {
+        svg
+          .append("text")
+          .attr("class", "no-data")
+          .attr("x", width / 2)
+          .attr("y", height / 2)
+          .attr("text-anchor", "middle")
+          .attr("fill", "#8c92ac")
+          .text("No data available for this country");
+        return;
+      }
+
+      let data = getGenre(countryData);
+      let gdata = d3.group(countryData, (d) => d.rating);
+      let kdata = Array.from(gdata, ([type, count]) => ({
+        type: type,
+        count: count.length,
+      }));
+
+      var keysSorted = kdata.sort((a, b) => {
+        return b.count - a.count;
+      });
+
+      var toprating = keysSorted[0].type;
+      var selectedGenre = showType;
+      if (!selectedGenre)
+      {
+        selectedGenre = "entertainment";
+      }
+
+
+      data = data.slice(Math.max(data.length - 10, 0));
+      const allCount = [];
+      data.forEach((d) => {
+        allCount.push(d.values);
+      });
+
+      const colorScale = d3
+        .scaleLinear()
+        .domain([
+          d3.min(data, (d) => d.values),
+          d3.max(data, (d) => d.values),
+        ])
+        .range(["#b9e4db", "#17813e"]);
+
+
+      const xScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(allCount)])
+        .range([0, width]);
+
+
+      const yScale = d3
+        .scaleBand()
+        .domain(data.map(function (d) { return d.key; }))
+        .padding(0.1)
+        .range([height, 0]);
+
+      const xAxis = d3.axisBottom(xScale);
+      const yAxis = d3.axisLeft(yScale);
+
+      svg
+        .append("g")
+        .attr("class", "x-axis")
+        .attr("transform", `translate(0, ${height})`);
+
+      svg
+        .select(".x-axis")
+        .transition()
+        .duration(1000)
+        .call(xAxis)
+        .selectAll("text")
+        .attr("color", "#8c92ac")
+        .attr("text-anchor", "end");
+
+      svg.append("g").attr("class", "y-axis");
+
+      svg
+        .select(".y-axis")
+        .transition()
+        .duration(1000)
+        .call(yAxis)
+        .selectAll("text")
+        .attr("color", "#8c92ac");
+
+      svg.selectAll(".tick line").attr("stroke", "#8c92ac");
+      svg.selectAll(".domain").attr("stroke", "#8c92ac");
+
+      svg
+        .append("text")
+        .attr("class", "x-axis-label")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#8c92ac");
+
+      svg.select(".x-axis-label").transition().duration(1000).text("Years");
+
+      svg
+        .append("text")
+        .attr("class", "y-axis-label")
+        .attr("x", -height / 2)
+        .attr("y", -40)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#8c92ac")
+        .attr("transform", "rotate(-90)");
+
+      svg.selectAll(".bar").remove();
+      const bars = svg
+        .selectAll(".bar")
+        .data(data, (d) => d.key);
+
+      const enterBars = bars
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", 0)
+        // .attr("y", function (d) { return yScale(d.key); })
+        // .attr("width", function (d) { return xScale(d.values); })
+        .attr("height", yScale.bandwidth())
+        .attr("fill", (d) => colorScale(d.values))
+        .attr("opacity", 0.6)
+        .on("mouseover", handleMouseOver)
+        .on("mousemove", (event) => {
+          const tooltip = d3.select(".tooltip");
+          tooltip
+            .style("left", event.pageX + 20 + "px")
+            .style("top", event.pageY + "px");
+        })
+        .on("mouseout", () => {
+          const tooltip = d3.select(".tooltip");
+          tooltip.style("opacity", 0);
+        })
+      
+      enterBars
+      .transition()
+      .duration(2000)
+      .delay(function(d,i){ return i*100})
+      .attr("y", function (d) { return yScale(d.key); })
+      .attr('width', d => xScale(d.values));
+
+      svg.selectAll(".annotation").remove();
+      const annotation = svg
+        .append("g")
+        .attr("class", "annotation")
+        .attr("transform", `translate(500, ${height - 120})`);
+
+      const foreignObject = annotation
+        .append("foreignObject")
+        .attr("width", 200)
+        .attr("height", 100);
+
+
+      foreignObject
+        .append("xhtml:div")
+        .style("font-size", "14px")
+        .html(
+          `<div style="border:1px solid black;"><span>
+            <p>Most watched <B>${selectedGenre}</B> in <B>${selectedCountry}</B> across all genres is rated:</P>
+              <p><B>${toprating}</B></p>
+          `
+        )
+        .attr("pointer-events", "none");
+
+    }
+
+    function handleMouseOver(event, d) {
+
+      const mscounts = d.values
+      const tooltip = d3.select(".tooltip");
+      tooltip
+        .style("opacity", 1)
+        .style("left", event.pageX + 20 + "px")
+        .style("top", event.pageY + "px");
+
+      tooltip.html(`
+                <div class="tooltip-title">Distinct count of entertainment in this genre:</div>
+                <div class="tooltip-text">
+                 <b> ${mscounts ? `${mscounts}` : `"No data"`}</b>
+                </div>
+                `);
+    }
+
+    function getGenre(data) {
+
+      var countOfMaxShowMovies = [];
+      var arr1 = [];
+      var maxCount = 0;
+      var two = [];
+      var mcountryA = [];
+      let odata = {};
+
+
+      const groupedData = d3.group(data, (d) => d.listed_in);
+      odata = Array.from(groupedData, ([key, values]) => ({
+        key: key,
+        values: values.length,
+      }));
+
+      var keysSorted = odata.sort((a, b) => {
+        return a.values - b.values;
+      });
+
+      return keysSorted;
+    }
+  </script>
+</body>
+
+</html>

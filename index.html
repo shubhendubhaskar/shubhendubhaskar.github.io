@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Netflix country wise contribution</title>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      .container {
+        width: 100%;
+        padding: 0 50px;
+        margin: auto;
+        height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .chart-container {
+        width: 55%;
+        height: auto;
+        padding: 50px 20px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .chart-container select {
+        width: 200px;
+        height: 32px;
+        border: 1px solid #8c92ac;
+        border-radius: 5px;
+        font-size: 14px;
+        padding: 0 10px;
+        cursor: pointer;
+      }
+
+      .chart-area {
+        width: 60%;
+        height: 300px;
+        border: 10px solid black;
+      }
+
+      .chart-area img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .narration {
+        width: 45%;
+        padding: 50px 20px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .title {
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
+
+      .about {
+        margin-bottom: 20px;
+      }
+
+      .subtitle {
+        margin-bottom: 10px;
+      }
+
+      .description {
+        margin-bottom: 20px;
+        font-size: 14px;
+      }
+
+      a {
+        width: 100px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border: none;
+        border-radius: 5px;
+        background-color: steelblue;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="chart-container">
+        <div id="chart" class="chart-area">
+          <img
+            src="./assets/Netflix-logo.png"
+            alt="Netflix"
+            width="100%"
+            height="auto"
+          />
+        </div>
+      </div>
+      <div class="narration">
+        <h3 class="title">
+          Welcome to the Netflix Entertainment content analysis!
+        </h3>
+        <p class="about">
+          In this drill down visualization, we explore how the Netflix has expanded itself in the world in including entertainment from different countries of the world.
+          The dataset gives us insights on the movies and series, country wise trend.
+          We will examine what countries are contributing the most to the content, what kind of content (Movies Or Series) and their corresponding genres along with their top ratings (TV-MA, PG13, R etc.)
+        </p>
+
+        <p class="about">
+          Through this visualization Netflix team can understand their content origination, their types (Movies or series), popular genres and their rating.
+          This also gives them the opportunity to explore the countries where there is huge prospect of increasing the business.
+        </p>
+       
+        <p class="about">
+          For the purpose of this assignment, the concept of drill down Structure is used. <br>
+          Users can drill down with each visualization to dig deeper into the data and choose their own path through the story. <br><br>
+          There are 3 scenes in this story - <br>
+          <ul>
+            <li>First is the drill down world map showing Netflix movies and series counts orignating in different countries.
+                      Users can either select from dropdown, click on a specific country or hover over the country to see detailed information. </li>
+                      <li>In the second scene, the line chart depicts the trend of Movie and Series production in the year range from 2008 to 2021 of the selected region on the world map. The user can also select another country directly from the dropdown on this line chart page.Clicking on the Blue or Orange line for Movies or TV Series will help drill down further into their genre and rating type.</li>
+          <li>The last scene is the genre statistics which gives the information on the top 10 genres of Movies or Series of the selected country and the annotation shows the top rating. The user can also select another country to view the genre and rating information. </li>
+          </ul>
+        </p>
+      <br>
+        <p class="subtitle">
+          There are two datasets used in this visualization, one core <b>Netflix</b> dataset and another <b>geoWorld.json</b> dataset having world map data.
+        </p>
+        <a href="./map.html">Next</a>
+      </div>
+    </div>
+  </body>
+</html>
